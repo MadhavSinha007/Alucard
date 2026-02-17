@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ChevronDown, MessageCircle } from "lucide-react";
 
 const faqs = [
   {
@@ -42,66 +43,87 @@ const FAQSection = () => {
   };
 
   return (
-    <section className="bg-black text-white py-16 sm:py-20 md:py-24 px-4 sm:px-6 md:px-16">
+    <section className="bg-blue-50 py-20 px-6 md:px-16 font-mono">
       <div className="max-w-4xl mx-auto">
+
         {/* Label */}
-        <p className="text-xs sm:text-sm text-gray-400 mb-2 tracking-widest uppercase">
+        <p className="text-xs tracking-widest uppercase font-bold mb-2">
           FAQs
         </p>
 
         {/* Heading */}
-        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-12 sm:mb-16 leading-tight">
-          Frequently Asked Questions
+        <h2 className="text-4xl md:text-5xl font-black mb-14 border-b-4 border-black inline-block">
+          FREQUENTLY ASKED QUESTIONS
         </h2>
 
         {/* FAQ List */}
-        <div className="space-y-6 sm:space-y-8">
+        <div className="space-y-8">
           {faqs.map((faq, index) => {
             const isOpen = openIndex === index;
 
             return (
               <div
                 key={index}
-                className="border-b border-gray-800 pb-6 sm:pb-8"
+                className="
+                  bg-white
+                  border-4 border-black
+                  shadow-[8px_8px_0px_#000]
+                "
               >
                 {/* Question */}
                 <button
                   onClick={() => toggle(index)}
-                  className="w-full flex justify-between items-start sm:items-center text-left gap-4 group"
+                  className="
+                    w-full
+                    flex
+                    justify-between
+                    items-center
+                    p-6
+                    text-left
+                    transition-all
+                    duration-150
+                    hover:bg-blue-200
+                  "
                 >
-                  <div className="flex gap-3 sm:gap-4">
-                    <span className="text-gray-500 text-sm sm:text-base font-medium min-w-[32px]">
+                  <div className="flex gap-4 items-start">
+                    <span className="font-black text-lg">
                       {String(index + 1).padStart(2, "0")}
                     </span>
 
-                    <h3 className="text-base sm:text-lg md:text-xl font-medium group-hover:text-gray-300 transition">
+                    <h3 className="text-lg md:text-xl font-bold leading-snug">
                       {faq.question}
                     </h3>
                   </div>
 
-                  {/* Icon */}
                   <div
-                    className={`min-w-[36px] h-9 w-9 rounded-full border border-gray-700 flex items-center justify-center transition-all duration-300 ${
-                      isOpen
-                        ? "bg-white text-black rotate-180"
-                        : "bg-transparent text-white"
-                    }`}
+                    className={`
+                      border-2 border-black
+                      p-2
+                      bg-blue-400
+                      shadow-[4px_4px_0px_#000]
+                      transition-transform
+                      duration-200
+                      ${isOpen ? "rotate-180" : ""}
+                    `}
                   >
-                    +
+                    <ChevronDown size={18} strokeWidth={3} />
                   </div>
                 </button>
 
                 {/* Answer */}
                 <div
-                  className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                    isOpen
-                      ? "max-h-96 opacity-100 mt-4 sm:mt-6"
-                      : "max-h-0 opacity-0"
-                  }`}
+                  className={`
+                    overflow-hidden
+                    transition-all
+                    duration-300
+                    ${isOpen ? "max-h-96 p-6 pt-0" : "max-h-0"}
+                  `}
                 >
-                  <p className="text-gray-400 text-sm sm:text-base leading-relaxed sm:ml-10">
-                    {faq.answer}
-                  </p>
+                  <div className="border-t-4 border-black pt-6">
+                    <p className="text-sm md:text-base font-medium leading-relaxed">
+                      {faq.answer}
+                    </p>
+                  </div>
                 </div>
               </div>
             );
@@ -109,15 +131,27 @@ const FAQSection = () => {
         </div>
 
         {/* CTA */}
-        <div className="mt-12 sm:mt-16">
-          <p className="text-gray-400 text-sm sm:text-base mb-4">
+        <div className="mt-16">
+          <p className="text-sm font-bold mb-6">
             Still have more questions?
           </p>
 
-          <button className="bg-white text-black text-sm sm:text-base px-6 sm:px-7 py-2.5 sm:py-3 rounded-full hover:bg-gray-200 transition duration-300">
-            Reach out to us →
+          <button className="
+            bg-blue-400
+            border-4 border-black
+            px-8 py-3
+            font-black
+            shadow-[6px_6px_0px_#000]
+            transition-all duration-150
+            hover:translate-x-1 hover:translate-y-1
+            hover:shadow-[3px_3px_0px_#000]
+            flex items-center gap-3
+          ">
+            <MessageCircle size={18} strokeWidth={2.5} />
+            CONTACT US
           </button>
         </div>
+
       </div>
     </section>
   );
