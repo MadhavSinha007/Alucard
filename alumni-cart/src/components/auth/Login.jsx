@@ -8,6 +8,7 @@ const Login = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = (e) => {
@@ -18,26 +19,40 @@ const Login = () => {
       return;
     }
 
-    login(); // fake login
-    navigate("/dashboard");
+    login();
+
+    if (isAdmin) {
+      navigate("/admin-dashboard");
+    } else {
+      navigate("/dashboard");
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white">
+    <div className="h-screen overflow-hidden flex items-center justify-center bg-white text-black px-6">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md border border-gray-800 p-6 rounded-lg space-y-4"
+        className="w-full max-w-md border border-gray-200 p-10 rounded-2xl space-y-6 shadow-sm"
       >
-        <h1 className="text-xl font-semibold">Login</h1>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {isAdmin ? "Admin Login" : "User Login"}
+          </h1>
+          <p className="text-gray-500 mt-2 text-sm">
+            {isAdmin
+              ? "Access the admin control panel."
+              : "Sign in to access the Alumni Portal."}
+          </p>
+        </div>
 
         {error && (
-          <p className="text-red-400 text-sm">{error}</p>
+          <p className="text-red-500 text-sm">{error}</p>
         )}
 
         <input
           type="email"
           placeholder="Email"
-          className="w-full bg-black border border-gray-700 px-3 py-2 rounded"
+          className="w-full border border-gray-300 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -45,22 +60,23 @@ const Login = () => {
         <input
           type="password"
           placeholder="Password"
-          className="w-full bg-black border border-gray-700 px-3 py-2 rounded"
+          className="w-full border border-gray-300 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <button className="w-full bg-white text-black py-2 rounded hover:bg-gray-200">
-          Login
+        <button className="w-full bg-black text-white py-3 rounded-xl font-medium hover:opacity-90 transition">
+          {isAdmin ? "Login as Admin" : "Login"}
         </button>
 
-        <div className="flex justify-between text-sm text-gray-400">
-          <button type="button">Forgot Password?</button>
+        <div className="text-center text-sm text-gray-500">
+          {isAdmin ? "Not an admin?" : "Are you an admin?"}{" "}
           <button
             type="button"
-            onClick={() => navigate("/register")}
+            onClick={() => setIsAdmin(!isAdmin)}
+            className="text-black font-medium hover:underline"
           >
-            Sign Up
+            {isAdmin ? "User Login" : "Admin Login"}
           </button>
         </div>
       </form>

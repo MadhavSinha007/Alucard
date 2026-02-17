@@ -14,35 +14,45 @@ const Sidebar = () => {
     { name: "Donations", path: "/donations" },
   ];
 
-  if (user.role === "admin") {
+  if (user?.role === "admin") {
     links.push({ name: "Admin Panel", path: "/admin" });
   }
 
   return (
-    <aside className="w-64 min-h-screen bg-black border-r border-gray-800 p-6">
-      <nav className="space-y-6">
-        <h2 className="text-xs text-gray-500 uppercase tracking-wide">
+    <aside className="w-64 min-h-screen bg-white border-r border-gray-200 px-6 py-10 flex flex-col">
+
+      {/* Section Label */}
+      <div className="mb-8">
+        <h2 className="text-xs uppercase tracking-widest text-gray-500">
           Navigation
         </h2>
+      </div>
 
-        <ul className="space-y-2">
-          {links.map((link) => (
-            <NavLink
-              key={link.name}
-              to={link.path}
-              className={({ isActive }) =>
-                `block px-3 py-2 rounded transition ${
-                  isActive
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-400 hover:text-white hover:bg-gray-900"
-                }`
-              }
-            >
-              {link.name}
-            </NavLink>
-          ))}
-        </ul>
+      {/* Navigation Links */}
+      <nav className="flex flex-col space-y-1">
+        {links.map((link) => (
+          <NavLink
+            key={link.name}
+            to={link.path}
+            end
+            className={({ isActive }) =>
+              `px-4 py-2.5 rounded-md text-sm font-medium transition-colors duration-200 ${
+                isActive
+                  ? "bg-gray-100 text-black"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-black"
+              }`
+            }
+          >
+            {link.name}
+          </NavLink>
+        ))}
       </nav>
+
+      {/* Bottom Spacer */}
+      <div className="mt-auto pt-10 text-xs text-gray-400">
+        Alumni Cart © {new Date().getFullYear()}
+      </div>
+
     </aside>
   );
 };

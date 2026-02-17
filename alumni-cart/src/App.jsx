@@ -1,9 +1,8 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import AlumniPage from "./pages/AlumniPage";
 import EventsPage from "./pages/EventsPage";
@@ -16,82 +15,113 @@ import Sidebar from "./components/layout/Sidebar";
 
 import { useAuth } from "./hooks/useAuth";
 
-const AppLayout = ({ children }) => (
-  <div className="flex bg-black text-white min-h-screen">
-    <Sidebar />
-    <main className="flex-1 p-6">{children}</main>
+
+// 🔹 Layout with Header only (Home page)
+const MainLayout = ({ children }) => (
+  <div className="min-h-screen bg-white text-black flex flex-col">
+    <Header />
+    <main className="flex-1">{children}</main>
   </div>
 );
 
-const App = () => {
+
+// 🔹 Layout with Header + Sidebar (Protected pages)
+const ProtectedLayout = ({ children }) => (
+  <div className="flex bg-white text-black h-screen overflow-hidden">
+    <Sidebar />
+    <div className="flex-1 flex flex-col">
+      <Header />
+      <main className="flex-1 overflow-y-auto p-6">
+        {children}
+      </main>
+    </div>
+  </div>
+);
+
+
+// 🔐 Route Guard
+const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
 
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <ProtectedLayout>{children}</ProtectedLayout>;
+};
+
+
+function App() {
   return (
     <BrowserRouter>
-      {user && <Header />}
-
       <Routes>
-        {/* Public */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
 
-        {/* Protected */}
-        {user && (
-          <>
-            <Route
-              path="/dashboard"
-              element={
-                <AppLayout>
-                  <DashboardPage />
-                </AppLayout>
-              }
-            />
-            <Route
-              path="/alumni"
-              element={
-                <AppLayout>
-                  <AlumniPage />
-                </AppLayout>
-              }
-            />
-            <Route
-              path="/events"
-              element={
-                <AppLayout>
-                  <EventsPage />
-                </AppLayout>
-              }
-            />
-            <Route
-              path="/mentorship"
-              element={
-                <AppLayout>
-                  <MentorshipPage />
-                </AppLayout>
-              }
-            />
-            <Route
-              path="/messages"
-              element={
-                <AppLayout>
-                  <MessagesPage />
-                </AppLayout>
-              }
-            />
-            <Route
-              path="/donations"
-              element={
-                <AppLayout>
-                  <DonationsPage />
-                </AppLayout>
-              }
-            />
-          </>
-        )}
+        {/* Public Home with Header */}
+        <Route
+          path="/"
+          element={
+            <MainLayout>
+              <HomePage />
+            </MainLayout>
+          }
+        />
+
+        {/* Login (NO HEADER) */}
+        <Route path="/login" element={<LoginPage />} />
+
+        {/* Protected Routes */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/alumni"
+          element={
+            <ProtectedRoute>
+              <AlumniPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/events"
+          element={
+            <ProtectedRoute>
+              <EventsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mentorship"
+          element={
+            <ProtectedRoute>
+              <MentorshipPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/messages"
+          element={
+            <ProtectedRoute>
+              <MessagesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/donations"
+          element={
+            <ProtectedRoute>
+              <DonationsPage />
+            </ProtectedRoute>
+          }
+        />
+
       </Routes>
     </BrowserRouter>
   );
-};
+}
 
 export default App;

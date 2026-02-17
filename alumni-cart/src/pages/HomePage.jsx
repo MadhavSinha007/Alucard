@@ -1,59 +1,68 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import FAQSection from "../components/layout/FAQSection";
+import HomeFooter from "../components/layout/HomeFooter";
 
 const HomePage = () => {
   return (
-    <div className="relative min-h-screen bg-[#ffffff] text-black overflow-hidden">
+    <div className="relative min-h-screen bg-white text-black overflow-hidden">
+      {/* === Soft Gradient Blobs (Subtle) === */}
+      <div className="pointer-events-none absolute top-[-140px] right-[-140px] w-[320px] sm:w-[400px] h-[320px] sm:h-[400px] bg-lime-400 rounded-full blur-[160px] opacity-10"></div>
+      <div className="pointer-events-none absolute bottom-[-180px] left-[-180px] w-[420px] sm:w-[500px] h-[420px] sm:h-[500px] bg-yellow-300 rounded-full blur-[180px] opacity-10"></div>
 
-      {/* === Gradient Blobs === */}
-      <div className="absolute top-[-150px] right-[-150px] w-[400px] h-[400px] bg-lime-500 rounded-full blur-[160px] opacity-20"></div>
-      <div className="absolute bottom-[-200px] left-[-200px] w-[500px] h-[500px] bg-yellow-400 rounded-full blur-[180px] opacity-20"></div>
+      {/* === Hero Section === */}
+      <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pt-24 sm:pt-28 md:pt-32 pb-20 sm:pb-24">
+        <div className="grid md:grid-cols-2 items-center gap-12 md:gap-16">
+          {/* Left Content */}
+          <div>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight tracking-tight">
+              We <span className="italic font-light">connect</span> you with
+              <br />
+              real alumni.
+            </h1>
 
-      {/* === Main Content === */}
-      <div className="relative z-10 max-w-6xl mx-auto px-8 py-32 grid md:grid-cols-2 items-center">
+            <p className="mt-5 sm:mt-6 text-gray-500 text-base sm:text-lg max-w-md leading-relaxed">
+              Build meaningful mentorships, explore career opportunities,
+              attend exclusive events, and grow with a powerful alumni network.
+            </p>
 
-        {/* Left Side (Hero Content) */}
-        <div>
-          <h1 className="text-5xl md:text-6xl font-extrabold leading-tight tracking-tight">
-            We <span className="italic font-light">connect</span> you with
-            <br />
-            real alumni.
-          </h1>
+            {/* CTA */}
+            <div className="mt-8 sm:mt-10 flex items-center gap-6">
+              <Link
+                to="/login"
+                className="group inline-flex items-center gap-3 bg-black text-white px-6 sm:px-7 py-3 rounded-full font-medium transition-all duration-300 hover:opacity-90"
+              >
+                Login
+                <span className="w-8 h-8 flex items-center justify-center bg-white text-black rounded-full transition-transform duration-300 group-hover:translate-x-1">
+                  →
+                </span>
+              </Link>
+            </div>
 
-          <p className="mt-6 text-gray-400 text-lg max-w-md leading-relaxed">
-            Build meaningful mentorships, explore career opportunities,
-            attend exclusive events, and grow with a powerful alumni network.
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="mt-10 flex items-center gap-6">
-
-            {/* Primary CTA */}
-            <Link
-              to="/login"
-              className="group flex items-center gap-3 bg-white text-black px-6 py-3 rounded-full font-medium transition-all duration-300 hover:scale-105"
-            >
-              Login
-              <span className="w-8 h-8 flex items-center justify-center bg-black text-white rounded-full transition-all duration-300 group-hover:translate-x-1">
-                →
-              </span>
-            </Link>
-
-            {/* Secondary CTA */}
-            <Link
-              to="/register"
-              className="text-gray-400 border-b border-gray-700 hover:text-black hover:border-white transition-all duration-300 pb-1"
-            >
-              Register
-            </Link>
-
+            {/* Admin Access */}
+            <div className="mt-5 sm:mt-6 text-sm text-gray-400">
+              Admin access?{" "}
+              <Link
+                to="/login"
+                className="text-black font-medium hover:underline"
+              >
+                Login here
+              </Link>
+            </div>
           </div>
+
+          {/* Right Spacer (future illustration) */}
+          <div className="hidden md:block" />
         </div>
+      </section>
 
-        {/* Right Side (Optional Decorative Space / Future Illustration) */}
-        <div className="hidden md:block"></div>
+      {/* === FAQ Section === */}
+      <section className="mt-8 sm:mt-12 md:mt-16">
+        <FAQSection />
+      </section>
 
-      </div>
+      {/* === Footer === */}
+      <HomeFooter />
     </div>
   );
 };
