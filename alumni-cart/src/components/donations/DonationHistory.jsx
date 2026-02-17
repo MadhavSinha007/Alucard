@@ -2,14 +2,29 @@ import React from "react";
 
 const DonationHistory = () => {
   return (
-    <div className="bg-gray-900 p-6 rounded border border-gray-800">
-      <h3 className="text-white font-semibold mb-4">
-        Donation History
+    <div
+      className="
+        bg-blue-100
+        border-4 border-black
+        p-6
+        shadow-[8px_8px_0px_#000]
+        font-mono
+      "
+    >
+      <h3 className="text-xl font-black mb-6">
+        DONATION HISTORY
       </h3>
 
-      <p className="text-gray-500 text-sm">
-        No donations yet.
-      </p>
+      <div
+        className="
+          bg-white
+          border-4 border-black
+          p-4
+          font-bold
+        "
+      >
+        NO DONATIONS YET.
+      </div>
     </div>
   );
 };

@@ -5,64 +5,67 @@ import HomeFooter from "../components/layout/HomeFooter";
 
 const HomePage = () => {
   return (
-    <div className="relative min-h-screen bg-white text-black overflow-hidden">
-      {/* === Soft Gradient Blobs (Subtle) === */}
-      <div className="pointer-events-none absolute top-[-140px] right-[-140px] w-[320px] sm:w-[400px] h-[320px] sm:h-[400px] bg-lime-400 rounded-full blur-[160px] opacity-10"></div>
-      <div className="pointer-events-none absolute bottom-[-180px] left-[-180px] w-[420px] sm:w-[500px] h-[420px] sm:h-[500px] bg-yellow-300 rounded-full blur-[180px] opacity-10"></div>
+    <div className="min-h-screen bg-blue-50 text-black font-mono">
 
-      {/* === Hero Section === */}
-      <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pt-24 sm:pt-28 md:pt-32 pb-20 sm:pb-24">
-        <div className="grid md:grid-cols-2 items-center gap-12 md:gap-16">
-          {/* Left Content */}
-          <div>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight tracking-tight">
-              We <span className="italic font-light">connect</span> you with
-              <br />
-              real alumni.
-            </h1>
+      {/* === HERO SECTION (CENTERED) === */}
+      <section className="flex flex-col items-center justify-center text-center px-6 pt-32 pb-28">
 
-            <p className="mt-5 sm:mt-6 text-gray-500 text-base sm:text-lg max-w-md leading-relaxed">
-              Build meaningful mentorships, explore career opportunities,
-              attend exclusive events, and grow with a powerful alumni network.
-            </p>
+        <h1 className="text-5xl md:text-6xl font-black leading-tight max-w-4xl">
+          WE{" "}
+          <span className="bg-blue-400 px-3 border-4 border-black shadow-[6px_6px_0px_#000]">
+            CONNECT
+          </span>
+          <br />
+          YOU WITH REAL ALUMNI.
+        </h1>
 
-            {/* CTA */}
-            <div className="mt-8 sm:mt-10 flex items-center gap-6">
-              <Link
-                to="/login"
-                className="group inline-flex items-center gap-3 bg-black text-white px-6 sm:px-7 py-3 rounded-full font-medium transition-all duration-300 hover:opacity-90"
-              >
-                Login
-                <span className="w-8 h-8 flex items-center justify-center bg-white text-black rounded-full transition-transform duration-300 group-hover:translate-x-1">
-                  →
-                </span>
-              </Link>
-            </div>
+        <p className="mt-8 text-lg font-medium max-w-2xl">
+          Build mentorships. Discover opportunities. Attend events.
+          Grow inside a powerful alumni network.
+        </p>
 
-            {/* Admin Access */}
-            <div className="mt-5 sm:mt-6 text-sm text-gray-400">
-              Admin access?{" "}
-              <Link
-                to="/login"
-                className="text-black font-medium hover:underline"
-              >
-                Login here
-              </Link>
-            </div>
-          </div>
+        {/* CTA */}
+        <div className="mt-12">
+          <Link
+            to="/login"
+            className="
+              inline-block
+              bg-blue-500
+              border-4 border-black
+              px-10 py-4
+              font-black text-lg
+              shadow-[8px_8px_0px_#000]
+              transition-all duration-150
+              hover:translate-x-1 hover:translate-y-1
+              hover:shadow-[4px_4px_0px_#000]
+            "
+          >
+            LOGIN →
+          </Link>
+        </div>
 
-          {/* Right Spacer (future illustration) */}
-          <div className="hidden md:block" />
+        {/* Admin */}
+        <div className="mt-6 text-sm font-bold">
+          ADMIN?{" "}
+          <Link to="/login" className="underline">
+            ACCESS HERE
+          </Link>
+        </div>
+
+      </section>
+
+      {/* === FAQ FULL WIDTH SECTION === */}
+      <section className="w-full bg-blue-100 border-t-4 border-black py-20 px-6">
+        <div className="max-w-6xl mx-auto">
+          <FAQSection />
         </div>
       </section>
 
-      {/* === FAQ Section === */}
-      <section className="mt-8 sm:mt-12 md:mt-16">
-        <FAQSection />
-      </section>
+      {/* === FOOTER === */}
+      <div className="border-t-4 border-black">
+        <HomeFooter />
+      </div>
 
-      {/* === Footer === */}
-      <HomeFooter />
     </div>
   );
 };
