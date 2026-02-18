@@ -7,25 +7,53 @@ const MENTORS = [
 
 const MentorList = () => {
   return (
-    <div className="p-6 text-white">
-      <h1 className="text-xl font-semibold mb-4">Mentors</h1>
+    <section className="p-8 bg-blue-50 min-h-screen font-mono">
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <h1 className="text-3xl font-black mb-10 border-b-4 border-black pb-4">
+        MENTORS
+      </h1>
+
+      <div className="grid md:grid-cols-2 gap-8">
         {MENTORS.map((mentor) => (
           <div
             key={mentor.id}
-            className="border border-gray-800 rounded p-4"
+            className="
+              bg-blue-200
+              border-4 border-black
+              p-6
+              shadow-[8px_8px_0px_#000]
+              transition-all duration-150
+              hover:translate-x-1 hover:translate-y-1
+              hover:shadow-[4px_4px_0px_#000]
+            "
           >
-            <h2 className="font-semibold">{mentor.name}</h2>
-            <p className="text-gray-400">{mentor.expertise}</p>
+            <h2 className="text-xl font-black mb-2">
+              {mentor.name.toUpperCase()}
+            </h2>
 
-            <button className="mt-3 bg-white text-black px-3 py-1 rounded">
-              Request Mentorship
+            <p className="font-bold mb-4">
+              {mentor.expertise}
+            </p>
+
+            <button
+              className="
+                bg-blue-500
+                border-4 border-black
+                px-4 py-2
+                font-black text-sm
+                shadow-[4px_4px_0px_#000]
+                transition-all duration-150
+                hover:translate-x-1 hover:translate-y-1
+                hover:shadow-[2px_2px_0px_#000]
+              "
+            >
+              REQUEST MENTORSHIP
             </button>
           </div>
         ))}
       </div>
-    </div>
+
+    </section>
   );
 };
 

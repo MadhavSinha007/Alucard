@@ -2,19 +2,52 @@ import React from "react";
 
 const AlumniPage = () => {
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-white">
-        Alumni Directory
-      </h1>
+    <div className="min-h-screen bg-blue-50 font-mono p-10 space-y-10">
 
-      <p className="text-gray-400">
-        Browse and connect with alumni from different batches and domains.
-      </p>
-
-      {/* later: AlumniCard + search/filter */}
-      <div className="border border-dashed border-gray-700 rounded-lg p-6 text-gray-500">
-        Alumni list coming soon...
+      {/* Title Block */}
+      <div className="
+        inline-block
+        bg-blue-300
+        border-4 border-black
+        px-6 py-4
+        shadow-[6px_6px_0px_#000]
+      ">
+        <h1 className="text-2xl font-black">
+          ALUMNI DIRECTORY
+        </h1>
       </div>
+
+      {/* Description Block */}
+      <div className="
+        max-w-2xl
+        bg-white
+        border-4 border-black
+        p-6
+        shadow-[6px_6px_0px_#000]
+        font-bold
+      ">
+        BROWSE AND CONNECT WITH ALUMNI FROM DIFFERENT BATCHES AND DOMAINS.
+      </div>
+
+      {/* Placeholder Section */}
+      <div className="
+        bg-blue-200
+        border-4 border-black
+        p-12
+        shadow-[6px_6px_0px_#000]
+        text-center
+      ">
+        <div className="
+          inline-block
+          bg-white
+          border-4 border-black
+          px-6 py-3
+          font-black
+        ">
+          ALUMNI LIST COMING SOON...
+        </div>
+      </div>
+
     </div>
   );
 };

@@ -7,15 +7,30 @@ const dummyChats = [
 
 const ChatList = ({ onSelect }) => {
   return (
-    <div className="w-64 border-r border-gray-800">
-      {dummyChats.map(chat => (
+    <div className="
+      w-72
+      bg-blue-200
+      border-r-4 border-black
+      font-mono
+    ">
+      {dummyChats.map((chat) => (
         <div
           key={chat.id}
           onClick={() => onSelect(chat)}
-          className="p-4 cursor-pointer hover:bg-gray-900"
+          className="
+            p-5
+            border-b-4 border-black
+            cursor-pointer
+            transition-all duration-150
+            hover:bg-blue-400
+          "
         >
-          <p className="text-white font-medium">{chat.name}</p>
-          <p className="text-sm text-gray-500">{chat.last}</p>
+          <p className="font-black text-sm">
+            {chat.name.toUpperCase()}
+          </p>
+          <p className="text-xs font-bold">
+            {chat.last}
+          </p>
         </div>
       ))}
     </div>

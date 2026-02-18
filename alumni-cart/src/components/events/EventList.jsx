@@ -2,7 +2,6 @@ import React from "react";
 import EventCard from "./EventCard";
 
 const EventList = () => {
-  // temporary mock data (replace with API later)
   const events = [
     {
       id: 1,
@@ -28,16 +27,18 @@ const EventList = () => {
   ];
 
   return (
-    <section className="space-y-6">
-      <h1 className="text-2xl font-semibold text-white">
-        Events
+    <section className="p-8 bg-blue-50 min-h-screen font-mono">
+
+      <h1 className="text-3xl font-black mb-10 border-b-4 border-black pb-4">
+        EVENTS
       </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         {events.map((event) => (
           <EventCard key={event.id} event={event} />
         ))}
       </div>
+
     </section>
   );
 };
