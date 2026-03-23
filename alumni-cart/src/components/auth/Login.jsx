@@ -1,17 +1,22 @@
 import React, { useState } from "react";
-import { useFakeAuth } from "../../hooks/useFakeAuth";
 import { useNavigate } from "react-router-dom";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../firebase";
+import { useAuth } from "../../context/AuthContext";
+
+
 
 const Login = () => {
-  const { login } = useFakeAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
+  
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email || !password) {
@@ -19,12 +24,32 @@ const Login = () => {
       return;
     }
 
-    login();
+    try {
+      setLoading(true);
+      setError("");
 
-    if (isAdmin) {
-      navigate("/admin-dashboard");
-    } else {
-      navigate("/dashboard");
+      // 🔐 Firebase login
+      const userCred = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      // 🔁 Fetch role from backend
+      await login(userCred.user);
+
+      const role = localStorage.getItem("role");
+
+      // 🚀 Redirect based on role
+      if (role === "admin") navigate("/dashboard");
+      else if (role === "student") navigate("/dashboard");
+      else navigate("/dashboard");
+
+    } catch (err) {
+      console.error(err);
+      setError("INVALID EMAIL OR PASSWORD");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -40,25 +65,24 @@ const Login = () => {
           p-10
           shadow-[10px_10px_0px_#000]
           space-y-8
+          animate-[fadeIn_0.3s_ease-in]
         "
       >
 
         {/* Title */}
         <div>
-          <h1 className="text-3xl font-black">
-            {isAdmin ? "ADMIN LOGIN" : "USER LOGIN"}
+          <h1 className="text-3xl font-black tracking-tight">
+            LOGIN
           </h1>
 
           <p className="mt-2 text-sm font-bold">
-            {isAdmin
-              ? "ACCESS THE ADMIN CONTROL PANEL."
-              : "SIGN IN TO ACCESS THE ALUMNI PORTAL."}
+            SIGN IN TO ACCESS THE PLATFORM.
           </p>
         </div>
 
         {/* Error */}
         {error && (
-          <div className="bg-red-400 border-4 border-black px-4 py-3 font-bold shadow-[4px_4px_0px_#000]">
+          <div className="bg-red-500 text-white border-4 border-black px-4 py-3 font-bold shadow-[4px_4px_0px_#000]">
             {error}
           </div>
         )}
@@ -75,6 +99,7 @@ const Login = () => {
             font-bold
             focus:outline-none
             focus:bg-blue-100
+            focus:ring-4 focus:ring-blue-300
           "
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -92,6 +117,7 @@ const Login = () => {
             font-bold
             focus:outline-none
             focus:bg-blue-100
+            focus:ring-4 focus:ring-blue-300
           "
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -100,6 +126,7 @@ const Login = () => {
         {/* Button */}
         <button
           type="submit"
+          disabled={loading}
           className="
             w-full
             bg-blue-500
@@ -111,26 +138,23 @@ const Login = () => {
             transition-all duration-150
             hover:translate-x-1 hover:translate-y-1
             hover:shadow-[3px_3px_0px_#000]
+            hover:scale-[0.98]
+            disabled:opacity-50
           "
         >
-          {isAdmin ? "LOGIN AS ADMIN" : "LOGIN"}
+          {loading ? "LOGGING IN..." : "LOGIN"}
         </button>
 
-        {/* Toggle */}
-        <div className="text-center text-sm font-bold">
-          {isAdmin ? "NOT AN ADMIN?" : "ARE YOU AN ADMIN?"}{" "}
-          <button
-            type="button"
-            onClick={() => setIsAdmin(!isAdmin)}
-            className="underline"
-          >
-            {isAdmin ? "USER LOGIN" : "ADMIN LOGIN"}
-          </button>
-        </div>
+        {/* Helper text */}
+        <p className="text-xs text-center font-bold opacity-70">
+          CONTACT ADMIN IF YOU DON’T HAVE ACCESS
+        </p>
 
       </form>
     </div>
   );
 };
 
+
 export default Login;
+
