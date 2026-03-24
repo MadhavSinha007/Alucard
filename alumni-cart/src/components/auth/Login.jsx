@@ -4,12 +4,9 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../firebase";
 import { useAuth } from "../../context/AuthContext";
 
-
-
 const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
-  
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,22 +25,28 @@ const Login = () => {
       setLoading(true);
       setError("");
 
-      // 🔐 Firebase login
+      // Firebase login
       const userCred = await signInWithEmailAndPassword(
         auth,
         email,
         password
       );
 
-      // 🔁 Fetch role from backend
+      // fetch role from backend + store in context/localStorage
       await login(userCred.user);
 
-      const role = localStorage.getItem("role");
+      const role = localStorage.getItem("role")?.toUpperCase();
 
-      // 🚀 Redirect based on role
-      if (role === "admin") navigate("/dashboard");
-      else if (role === "student") navigate("/dashboard");
-      else navigate("/dashboard");
+      // ROLE BASED REDIRECT (SAFE)
+      if (role === "ADMIN") {
+        navigate("/dashboard");
+      } else if (role === "STUDENT") {
+        navigate("/dashboard");
+      } else if (role === "ALUMNI") {
+        navigate("/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
 
     } catch (err) {
       console.error(err);
@@ -58,103 +61,44 @@ const Login = () => {
 
       <form
         onSubmit={handleSubmit}
-        className="
-          w-full max-w-md
-          bg-blue-200
-          border-4 border-black
-          p-10
-          shadow-[10px_10px_0px_#000]
-          space-y-8
-          animate-[fadeIn_0.3s_ease-in]
-        "
+        className="w-full max-w-md bg-blue-200 border-4 border-black p-10 shadow-[10px_10px_0px_#000] space-y-8"
       >
 
-        {/* Title */}
-        <div>
-          <h1 className="text-3xl font-black tracking-tight">
-            LOGIN
-          </h1>
+        <h1 className="text-3xl font-black">LOGIN</h1>
 
-          <p className="mt-2 text-sm font-bold">
-            SIGN IN TO ACCESS THE PLATFORM.
-          </p>
-        </div>
-
-        {/* Error */}
         {error && (
-          <div className="bg-red-500 text-white border-4 border-black px-4 py-3 font-bold shadow-[4px_4px_0px_#000]">
+          <div className="bg-red-500 text-white border-4 border-black px-4 py-3 font-bold">
             {error}
           </div>
         )}
 
-        {/* Email */}
         <input
           type="email"
           placeholder="EMAIL"
-          className="
-            w-full
-            border-4 border-black
-            px-4 py-3
-            bg-white
-            font-bold
-            focus:outline-none
-            focus:bg-blue-100
-            focus:ring-4 focus:ring-blue-300
-          "
+          className="w-full border-4 border-black px-4 py-3 font-bold"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
-        {/* Password */}
         <input
           type="password"
           placeholder="PASSWORD"
-          className="
-            w-full
-            border-4 border-black
-            px-4 py-3
-            bg-white
-            font-bold
-            focus:outline-none
-            focus:bg-blue-100
-            focus:ring-4 focus:ring-blue-300
-          "
+          className="w-full border-4 border-black px-4 py-3 font-bold"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        {/* Button */}
         <button
           type="submit"
           disabled={loading}
-          className="
-            w-full
-            bg-blue-500
-            border-4 border-black
-            py-3
-            font-black
-            text-lg
-            shadow-[6px_6px_0px_#000]
-            transition-all duration-150
-            hover:translate-x-1 hover:translate-y-1
-            hover:shadow-[3px_3px_0px_#000]
-            hover:scale-[0.98]
-            disabled:opacity-50
-          "
+          className="w-full bg-blue-500 border-4 border-black py-3 font-black"
         >
           {loading ? "LOGGING IN..." : "LOGIN"}
         </button>
-
-        {/* Helper text */}
-        <p className="text-xs text-center font-bold opacity-70">
-          CONTACT ADMIN IF YOU DON’T HAVE ACCESS
-        </p>
 
       </form>
     </div>
   );
 };
 
-
 export default Login;
-
