@@ -7,6 +7,8 @@ import {
   Megaphone,
 } from "lucide-react";
 
+const BASE_URL = "http://localhost:8080";
+
 /* =============================
    Reusable Brutal Card
 ============================= */
@@ -41,31 +43,71 @@ const AdminDashboard = () => {
   const [recentUsers, setRecentUsers] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [announcement, setAnnouncement] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAdminData = async () => {
+      setLoading(true);
+
+      // --- Stats ---
       try {
-        const [statsRes, usersRes, notifRes, announceRes] =
-          await Promise.all([
-            fetch("/api/admin/stats"),
-            fetch("/api/admin/recent-users"),
-            fetch("/api/admin/notifications"),
-            fetch("/api/admin/announcement"),
-          ]);
-
-        setStats(await statsRes.json());
-        setRecentUsers(await usersRes.json());
-        setNotifications(await notifRes.json());
-
-        const announceData = await announceRes.json();
-        setAnnouncement(announceData.message);
+        const statsRes = await fetch(`${BASE_URL}/api/admin/stats`);
+        const statsData = await statsRes.json();
+        setStats(statsData);
       } catch (err) {
-        console.error("Admin dashboard fetch error", err);
+        console.warn("Admin stats fetch error:", err);
       }
+
+      // --- Recent Users ---
+      try {
+        const usersRes = await fetch(`${BASE_URL}/api/admin/recent-users`);
+        const usersData = await usersRes.json();
+        setRecentUsers(Array.isArray(usersData) ? usersData : []);
+      } catch (err) {
+        console.warn("Recent users fetch error:", err);
+      }
+
+      // --- Notifications ---
+      try {
+        const notifRes = await fetch(`${BASE_URL}/api/admin/notifications`);
+        const notifData = await notifRes.json();
+        setNotifications(Array.isArray(notifData) ? notifData : []);
+      } catch (err) {
+        console.warn("Admin notifications fetch error:", err);
+      }
+
+      // --- Announcement ---
+      try {
+        const announceRes = await fetch(`${BASE_URL}/api/announcements`);
+        const announceData = await announceRes.json();
+
+        if (Array.isArray(announceData) && announceData.length > 0) {
+          setAnnouncement(
+            announceData[0].message ||
+            announceData[0].content ||
+            announceData[0].text ||
+            ""
+          );
+        } else if (announceData?.message) {
+          setAnnouncement(announceData.message);
+        }
+      } catch (err) {
+        console.warn("Announcement fetch error:", err);
+      }
+
+      setLoading(false);
     };
 
     fetchAdminData();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-blue-50 p-6 sm:p-10 font-mono flex items-center justify-center">
+        <p className="text-xl font-black animate-pulse">LOADING DASHBOARD...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-blue-50 p-6 sm:p-10 font-mono">
@@ -74,30 +116,34 @@ const AdminDashboard = () => {
       </h1>
 
       {/* ================= TOP STATS ================= */}
-
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
         <AdminCard
           title="Total Users"
-          value={stats?.totalUsers || "—"}
+          value={stats?.totalUsers ?? stats?.userCount ?? "—"}
           subtitle="+8% this month"
           icon={Users}
         />
         <AdminCard
           title="Active Orders"
-          value={stats?.activeOrders || "—"}
+          value={stats?.activeOrders ?? stats?.orderCount ?? "—"}
           subtitle="Updated today"
           icon={ShoppingCart}
         />
         <AdminCard
           title="Revenue"
-          value={stats?.revenue || "—"}
+          value={
+            stats?.revenue
+              ? `$${Number(stats.revenue).toLocaleString()}`
+              : stats?.totalRevenue
+              ? `$${Number(stats.totalRevenue).toLocaleString()}`
+              : "—"
+          }
           subtitle="+12% from last month"
           icon={DollarSign}
         />
       </div>
 
       {/* ================= LOWER GRID ================= */}
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
         {/* ===== Recent Users ===== */}
@@ -116,9 +162,9 @@ const AdminDashboard = () => {
             <p className="font-bold">No new users</p>
           ) : (
             <ul className="space-y-4 text-sm font-medium">
-              {recentUsers.map((user) => (
+              {recentUsers.map((user, idx) => (
                 <li
-                  key={user.id}
+                  key={user.id ?? idx}
                   className="
                     bg-blue-200
                     border-2 border-black
@@ -126,7 +172,8 @@ const AdminDashboard = () => {
                     shadow-[4px_4px_0px_#000]
                   "
                 >
-                  {user.name} — {user.email}
+                  {user.name ?? user.fullName ?? user.username ?? "Unknown"}{" "}
+                  — {user.email ?? "No email"}
                 </li>
               ))}
             </ul>
@@ -149,9 +196,9 @@ const AdminDashboard = () => {
             <p className="font-bold">No alerts</p>
           ) : (
             <ul className="space-y-4 text-sm font-medium">
-              {notifications.map((note) => (
+              {notifications.map((note, idx) => (
                 <li
-                  key={note.id}
+                  key={note.id ?? idx}
                   className="
                     bg-white
                     border-2 border-black
@@ -159,7 +206,7 @@ const AdminDashboard = () => {
                     shadow-[4px_4px_0px_#000]
                   "
                 >
-                  {note.message}
+                  {note.message || note.content || note.text}
                 </li>
               ))}
             </ul>

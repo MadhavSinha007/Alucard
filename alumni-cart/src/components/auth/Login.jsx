@@ -14,56 +14,41 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!email || !password) {
-      setError("PLEASE ENTER EMAIL AND PASSWORD");
-      return;
-    }
+  if (!email || !password) {
+    setError("PLEASE ENTER EMAIL AND PASSWORD");
+    return;
+  }
 
-    try {
-      setLoading(true);
-      setError("");
+  try {
+    setLoading(true);
+    setError("");
 
-      // Firebase login
-      const userCred = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+    const userCred = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
 
-      // fetch role from backend + store in context/localStorage
-      await login(userCred.user);
+    await login(userCred.user);
 
-      const role = localStorage.getItem("role")?.toUpperCase();
-
-      // ROLE BASED REDIRECT (SAFE)
-      if (role === "ADMIN") {
-        navigate("/dashboard");
-      } else if (role === "STUDENT") {
-        navigate("/dashboard");
-      } else if (role === "ALUMNI") {
-        navigate("/dashboard");
-      } else {
-        navigate("/dashboard");
-      }
-
-    } catch (err) {
-      console.error(err);
-      setError("INVALID EMAIL OR PASSWORD");
-    } finally {
-      setLoading(false);
-    }
-  };
+    // ❗ NO NAVIGATION HERE (IMPORTANT FIX)
+    navigate("/"); // let App routing handle role redirect
+  } catch (err) {
+    console.error(err);
+    setError("INVALID EMAIL OR PASSWORD");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-blue-50 font-mono px-6">
-
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-md bg-blue-200 border-4 border-black p-10 shadow-[10px_10px_0px_#000] space-y-8"
       >
-
         <h1 className="text-3xl font-black">LOGIN</h1>
 
         {error && (
@@ -91,11 +76,10 @@ const Login = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-500 border-4 border-black py-3 font-black"
+          className="w-full bg-blue-500 border-4 border-black py-3 font-black hover:bg-blue-600 transition-colors"
         >
           {loading ? "LOGGING IN..." : "LOGIN"}
         </button>
-
       </form>
     </div>
   );

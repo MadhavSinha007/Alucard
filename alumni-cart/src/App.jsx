@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "./hooks/useAuth";
 
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
@@ -13,10 +14,10 @@ import DonationsPage from "./pages/DonationsPage";
 import Header from "./components/layout/Header";
 import Sidebar from "./components/layout/Sidebar";
 
-import { useAuth } from "./hooks/useAuth";
+/* =============================
+   Layouts
+============================= */
 
-
-// 🔹 Layout with Header only (Home page)
 const MainLayout = ({ children }) => (
   <div className="min-h-screen bg-white text-black flex flex-col">
     <Header />
@@ -24,39 +25,82 @@ const MainLayout = ({ children }) => (
   </div>
 );
 
-
-// 🔹 Layout with Header + Sidebar (Protected pages)
 const ProtectedLayout = ({ children }) => (
   <div className="flex bg-white text-black h-screen overflow-hidden">
     <Sidebar />
     <div className="flex-1 flex flex-col">
       <Header />
-      <main className="flex-1 overflow-y-auto p-6">
-        {children}
-      </main>
+      <main className="flex-1 overflow-y-auto p-6">{children}</main>
     </div>
   </div>
 );
 
+/* =============================
+   Route Guards
+============================= */
 
-// 🔐 Route Guard
 const ProtectedRoute = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
-  if (!user) {
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-screen font-mono font-black text-xl">
+        LOADING...
+      </div>
+    );
+
+  if (!user) return <Navigate to="/login" replace />;
+
+  return <ProtectedLayout>{children}</ProtectedLayout>;
+};
+
+const RoleRoute = ({ children, allowedRoles }) => {
+  const { user, role, loading } = useAuth();
+
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-screen font-mono font-black text-xl">
+        LOADING...
+      </div>
+    );
+
+  if (!user) return <Navigate to="/login" replace />;
+
+  if (!role)
+    return (
+      <div className="flex items-center justify-center h-screen font-mono font-black text-xl">
+        LOADING...
+      </div>
+    );
+
+  if (!allowedRoles.includes(role)) {
+    if (role === "ADMIN") return <Navigate to="/dashboard" replace />;
+    if (role === "ALUMNI") return <Navigate to="/alumni" replace />;
     return <Navigate to="/login" replace />;
   }
 
   return <ProtectedLayout>{children}</ProtectedLayout>;
 };
 
+/* =============================
+   App
+============================= */
 
 function App() {
+  const { user, role, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen font-mono font-black text-xl">
+        LOADING...
+      </div>
+    );
+  }
+
   return (
     <BrowserRouter>
       <Routes>
-
-        {/* Public Home with Header */}
+        {/* PUBLIC */}
         <Route
           path="/"
           element={
@@ -66,26 +110,47 @@ function App() {
           }
         />
 
-        {/* Login (NO HEADER) */}
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Protected Routes */}
+        {/* AUTO REDIRECT AFTER LOGIN */}
+        <Route
+          path="/"
+          element={
+            user ? (
+              role === "ADMIN" ? (
+                <Navigate to="/dashboard" replace />
+              ) : role === "ALUMNI" ? (
+                <Navigate to="/alumni" replace />
+              ) : (
+                <HomePage />
+              )
+            ) : (
+              <HomePage />
+            )
+          }
+        />
+
+        {/* ADMIN */}
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute>
+            <RoleRoute allowedRoles={["ADMIN"]}>
               <DashboardPage />
-            </ProtectedRoute>
+            </RoleRoute>
           }
         />
+
+        {/* ALUMNI */}
         <Route
           path="/alumni"
           element={
-            <ProtectedRoute>
+            <RoleRoute allowedRoles={["ALUMNI"]}>
               <AlumniPage />
-            </ProtectedRoute>
+            </RoleRoute>
           }
         />
+
+        {/* SHARED */}
         <Route
           path="/events"
           element={
@@ -94,6 +159,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/mentorship"
           element={
@@ -102,6 +168,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/messages"
           element={
@@ -110,6 +177,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/donations"
           element={
@@ -119,6 +187,8 @@ function App() {
           }
         />
 
+        {/* FALLBACK */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

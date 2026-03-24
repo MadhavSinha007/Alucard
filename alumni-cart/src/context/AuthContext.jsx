@@ -14,24 +14,35 @@ export const AuthProvider = ({ children }) => {
       const token = await firebaseUser.getIdToken();
 
       const res = await fetch("http://localhost:8080/api/users/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) throw new Error("Failed to fetch role");
-
       const data = await res.json();
+      const fetchedRole = data?.role?.toUpperCase() || null;
 
-      if (data?.role) {
-        setRole(data.role);
-      } else {
-        setRole(null);
-      }
+      setRole(fetchedRole);
+      return fetchedRole;
     } catch (err) {
-      console.error("Role fetch error:", err);
+      console.error(err);
       setRole(null);
+      return null;
     }
+  };
+
+  const login = async (firebaseUser) => {
+    setUser(firebaseUser);
+    setLoading(true);
+
+    const fetchedRole = await fetchRole(firebaseUser);
+
+    setLoading(false);
+    return fetchedRole;
+  };
+
+  const logout = async () => {
+    await signOut(auth);
+    setUser(null);
+    setRole(null);
   };
 
   useEffect(() => {
@@ -52,28 +63,11 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  const login = async (firebaseUser) => {
-    setUser(firebaseUser);
-    await fetchRole(firebaseUser);
-  };
-
-  const logout = async () => {
-    await signOut(auth);
-    setUser(null);
-    setRole(null);
-  };
-
   return (
     <AuthContext.Provider value={{ user, role, loading, login, logout }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used inside AuthProvider");
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);
