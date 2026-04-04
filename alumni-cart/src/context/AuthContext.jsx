@@ -2,72 +2,74 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth } from "../firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
-export const AuthProvider = ({ children }) => {
+function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
+  const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchRole = async (firebaseUser) => {
+  const fetchUserData = async (firebaseUser) => {
     try {
       const token = await firebaseUser.getIdToken();
+      console.log("✅ Got token, fetching /api/users/me...");
 
       const res = await fetch("http://localhost:8080/api/users/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      console.log("✅ /me response status:", res.status);
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
       const data = await res.json();
-      const fetchedRole = data?.role?.toUpperCase() || null;
+      console.log("✅ userData:", data);
 
-      setRole(fetchedRole);
-      return fetchedRole;
+      setUserData(data);
+      setRole(data?.role?.toUpperCase() || null);
     } catch (err) {
-      console.error(err);
+      console.error("❌ fetchUserData error:", err);
+      setUserData(null);
       setRole(null);
-      return null;
     }
-  };
-
-  const login = async (firebaseUser) => {
-    setUser(firebaseUser);
-    setLoading(true);
-
-    const fetchedRole = await fetchRole(firebaseUser);
-
-    setLoading(false);
-    return fetchedRole;
-  };
-
-  const logout = async () => {
-    await signOut(auth);
-    setUser(null);
-    setRole(null);
   };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true);
+      console.log("🔥 onAuthStateChanged fired, user:", firebaseUser?.email);
 
       if (firebaseUser) {
         setUser(firebaseUser);
-        await fetchRole(firebaseUser);
+        await fetchUserData(firebaseUser); // await so loading turns off AFTER data
       } else {
         setUser(null);
+        setUserData(null);
         setRole(null);
       }
 
-      setLoading(false);
+      setLoading(false); // always runs after everything
     });
 
     return () => unsubscribe();
   }, []);
 
+  const logout = async () => {
+    await signOut(auth);
+    setUser(null);
+    setUserData(null);
+    setRole(null);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, role, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, userData, role, loading, logout }}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
-export const useAuth = () => useContext(AuthContext);
+function useAuth() {
+  return useContext(AuthContext);
+}
+
+export { AuthProvider, useAuth };

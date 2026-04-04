@@ -1,16 +1,26 @@
 import React from "react";
 import { LogOut, User } from "lucide-react";
-import { useFakeAuth } from "../../hooks/useFakeAuth";
+import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const Header = () => {
-  const { user, logout } = useFakeAuth();
+  const { user, userData, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();          // clear auth state
-    navigate("/");     // go back to home (or /login)
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login");
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
   };
+
+  // Prefer fullName from backend, fall back to email from Firebase
+  const displayName =
+    userData?.fullName?.toUpperCase() ||
+    user?.email?.toUpperCase() ||
+    "USER";
 
   return (
     <header className="
@@ -24,19 +34,13 @@ const Header = () => {
       font-mono
       shadow-[6px_6px_0px_#000]
     ">
+      <h1 className="text-2xl font-black">ALUMNI CART</h1>
 
-      {/* Brand */}
-      <h1 className="text-2xl font-black">
-        ALUMNI CART
-      </h1>
-
-      {/* Right Side */}
       <div className="flex items-center gap-6">
-
         <div className="flex items-center gap-2 border-2 border-black px-4 py-2 bg-blue-200 shadow-[3px_3px_0px_#000]">
           <User size={16} strokeWidth={2.5} />
           <span className="text-sm font-bold">
-            WELCOME, {user?.name?.toUpperCase() || "USER"}
+            WELCOME, {displayName}
           </span>
         </div>
 
@@ -57,7 +61,6 @@ const Header = () => {
           <LogOut size={16} strokeWidth={2.5} />
           LOGOUT
         </button>
-
       </div>
     </header>
   );

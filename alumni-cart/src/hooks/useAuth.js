@@ -1,8 +1,2 @@
-export const useAuth = () => {
-  return {
-    user: {
-      role: "alumni", // change to "admin" to test admin
-      name: "Test User",
-    },
-  };
-};
+// src/hooks/useAuth.js
+export { useAuth } from "../context/AuthContext";

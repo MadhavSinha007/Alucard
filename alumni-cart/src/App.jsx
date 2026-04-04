@@ -5,18 +5,16 @@ import { useAuth } from "./hooks/useAuth";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
-import AlumniPage from "./pages/AlumniPage";
 import EventsPage from "./pages/EventsPage";
 import MentorshipPage from "./pages/MentorshipPage";
 import MessagesPage from "./pages/MessagesPage";
 import DonationsPage from "./pages/DonationsPage";
+import AlumniPage from "./pages/AlumniPage";
+import AlumniProfilePage from "./pages/AlumniProfilePage";
+import EditProfilePage from "./pages/EditProfilePage";
 
 import Header from "./components/layout/Header";
 import Sidebar from "./components/layout/Sidebar";
-
-/* =============================
-   Layouts
-============================= */
 
 const MainLayout = ({ children }) => (
   <div className="min-h-screen bg-white text-black flex flex-col">
@@ -35,63 +33,24 @@ const ProtectedLayout = ({ children }) => (
   </div>
 );
 
-/* =============================
-   Route Guards
-============================= */
-
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
-
   if (loading)
     return (
-      <div className="flex items-center justify-center h-screen font-mono font-black text-xl">
+      <div className="flex items-center justify-center h-screen font-mono font-black text-xl animate-pulse">
         LOADING...
       </div>
     );
-
   if (!user) return <Navigate to="/login" replace />;
-
   return <ProtectedLayout>{children}</ProtectedLayout>;
 };
-
-const RoleRoute = ({ children, allowedRoles }) => {
-  const { user, role, loading } = useAuth();
-
-  if (loading)
-    return (
-      <div className="flex items-center justify-center h-screen font-mono font-black text-xl">
-        LOADING...
-      </div>
-    );
-
-  if (!user) return <Navigate to="/login" replace />;
-
-  if (!role)
-    return (
-      <div className="flex items-center justify-center h-screen font-mono font-black text-xl">
-        LOADING...
-      </div>
-    );
-
-  if (!allowedRoles.includes(role)) {
-    if (role === "ADMIN") return <Navigate to="/dashboard" replace />;
-    if (role === "ALUMNI") return <Navigate to="/alumni" replace />;
-    return <Navigate to="/login" replace />;
-  }
-
-  return <ProtectedLayout>{children}</ProtectedLayout>;
-};
-
-/* =============================
-   App
-============================= */
 
 function App() {
-  const { user, role, loading } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen font-mono font-black text-xl">
+      <div className="flex items-center justify-center h-screen font-mono font-black text-xl animate-pulse">
         LOADING...
       </div>
     );
@@ -100,95 +59,68 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* PUBLIC */}
+
+        {/* HOME */}
         <Route
           path="/"
           element={
-            <MainLayout>
-              <HomePage />
-            </MainLayout>
+            !user
+              ? <MainLayout><HomePage /></MainLayout>
+              : <Navigate to="/dashboard" replace />
           }
         />
 
-        <Route path="/login" element={<LoginPage />} />
-
-        {/* AUTO REDIRECT AFTER LOGIN */}
+        {/* LOGIN */}
         <Route
-          path="/"
-          element={
-            user ? (
-              role === "ADMIN" ? (
-                <Navigate to="/dashboard" replace />
-              ) : role === "ALUMNI" ? (
-                <Navigate to="/alumni" replace />
-              ) : (
-                <HomePage />
-              )
-            ) : (
-              <HomePage />
-            )
-          }
+          path="/login"
+          element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />}
         />
 
-        {/* ADMIN */}
+        {/* DASHBOARD — DashboardPage renders correct component by role */}
         <Route
           path="/dashboard"
           element={
-            <RoleRoute allowedRoles={["ADMIN"]}>
+            <ProtectedRoute>
               <DashboardPage />
-            </RoleRoute>
+            </ProtectedRoute>
           }
         />
 
-        {/* ALUMNI */}
+        {/* ALUMNI DIRECTORY + PROFILE + EDIT */}
         <Route
           path="/alumni"
           element={
-            <RoleRoute allowedRoles={["ALUMNI"]}>
+            <ProtectedRoute>
               <AlumniPage />
-            </RoleRoute>
+            </ProtectedRoute>
           }
         />
-
-        {/* SHARED */}
         <Route
-          path="/events"
+          path="/alumni/:id"
           element={
             <ProtectedRoute>
-              <EventsPage />
+              <AlumniProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/alumni/:id/edit"
+          element={
+            <ProtectedRoute>
+              <EditProfilePage />
             </ProtectedRoute>
           }
         />
 
-        <Route
-          path="/mentorship"
-          element={
-            <ProtectedRoute>
-              <MentorshipPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/messages"
-          element={
-            <ProtectedRoute>
-              <MessagesPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/donations"
-          element={
-            <ProtectedRoute>
-              <DonationsPage />
-            </ProtectedRoute>
-          }
-        />
+        {/* SHARED PROTECTED */}
+        <Route path="/events"     element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
+        <Route path="/mentorship" element={<ProtectedRoute><MentorshipPage /></ProtectedRoute>} />
+        <Route path="/messages"   element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+        <Route path="/donations"  element={<ProtectedRoute><DonationsPage /></ProtectedRoute>} />
 
         {/* FALLBACK */}
         <Route path="*" element={<Navigate to="/" replace />} />
+
       </Routes>
     </BrowserRouter>
   );

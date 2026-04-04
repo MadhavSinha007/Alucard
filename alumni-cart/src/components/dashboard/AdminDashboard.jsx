@@ -1,109 +1,157 @@
 import React, { useEffect, useState } from "react";
 import {
-  Users,
-  ShoppingCart,
-  DollarSign,
   Bell,
-  Megaphone,
+  Calendar,
+  Clock,
+  User,
+  HandCoins,
+  Users,
+  GraduationCap,
+  MessageSquare,
 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 const BASE_URL = "http://localhost:8080";
 
-/* =============================
-   Reusable Brutal Card
-============================= */
-
-const AdminCard = ({ title, value, subtitle, icon: Icon }) => {
-  return (
-    <div className="
-      bg-blue-400
-      border-4 border-black
-      p-8
-      shadow-[10px_10px_0px_#000]
-      transition-all duration-150
-      hover:translate-x-1 hover:translate-y-1
-      hover:shadow-[5px_5px_0px_#000]
-    ">
-      <div className="flex items-center gap-3 mb-4">
-        <Icon size={22} strokeWidth={2.5} />
-        <p className="text-sm font-bold uppercase">{title}</p>
-      </div>
-      <h2 className="text-4xl font-black">{value}</h2>
-      <p className="text-xs mt-3 font-medium">{subtitle}</p>
+const BrutalCard = ({ title, value, subtitle, icon: Icon }) => (
+  <div className="
+    bg-blue-400 border-4 border-black p-6
+    shadow-[8px_8px_0px_#000]
+    transition-all duration-150
+    hover:translate-x-1 hover:translate-y-1
+    hover:shadow-[4px_4px_0px_#000]
+  ">
+    <div className="flex items-center gap-3 mb-3">
+      <Icon size={22} strokeWidth={2.5} />
+      <p className="text-sm font-bold uppercase">{title}</p>
     </div>
-  );
-};
-
-/* =============================
-   Admin Dashboard
-============================= */
+    <h2 className="text-3xl font-black">{value}</h2>
+    <p className="text-xs mt-2 font-medium">{subtitle}</p>
+  </div>
+);
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState(null);
-  const [recentUsers, setRecentUsers] = useState([]);
+  const { user, userData } = useAuth();
+
   const [notifications, setNotifications] = useState([]);
-  const [announcement, setAnnouncement] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [mentorship, setMentorship] = useState(null);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
+  const [stats, setStats] = useState({
+    totalDonations: "₹0",
+    eventsAttended: 0,
+    mentorshipSessions: 0,
+    upcomingEvents: 0,
+    nextEventName: "—",
+  });
+
+  // ✅ SAME as Alumni
   useEffect(() => {
-    const fetchAdminData = async () => {
+    if (!userData) return;
+
+    setStats((prev) => ({
+      ...prev,
+      totalDonations: `₹${Number(userData.totalDonation || 0).toLocaleString()}`,
+      eventsAttended: Number(userData.eventAttended || 0),
+      mentorshipSessions: Number(userData.mentorshipSession || 0),
+    }));
+  }, [userData]);
+
+  // ✅ SAME FETCH AS ALUMNI
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchData = async () => {
       setLoading(true);
-
-      // --- Stats ---
       try {
-        const statsRes = await fetch(`${BASE_URL}/api/admin/stats`);
-        const statsData = await statsRes.json();
-        setStats(statsData);
-      } catch (err) {
-        console.warn("Admin stats fetch error:", err);
-      }
+        const token = await user.getIdToken();
 
-      // --- Recent Users ---
-      try {
-        const usersRes = await fetch(`${BASE_URL}/api/admin/recent-users`);
-        const usersData = await usersRes.json();
-        setRecentUsers(Array.isArray(usersData) ? usersData : []);
-      } catch (err) {
-        console.warn("Recent users fetch error:", err);
-      }
+        // Mentorship
+        try {
+          const res = await fetch(`${BASE_URL}/api/mentorship/my-requests`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            const next = data[0];
+            setMentorship({
+              date: next.date || next.scheduledDate || "TBD",
+              time: next.time || next.scheduledTime || "TBD",
+              studentName: next.studentName || next.requesterName || "Unknown",
+              department: next.department || next.branch || "N/A",
+            });
+          }
+        } catch {}
 
-      // --- Notifications ---
-      try {
-        const notifRes = await fetch(`${BASE_URL}/api/admin/notifications`);
-        const notifData = await notifRes.json();
-        setNotifications(Array.isArray(notifData) ? notifData : []);
-      } catch (err) {
-        console.warn("Admin notifications fetch error:", err);
-      }
+        // Events
+        try {
+          const res = await fetch(`${BASE_URL}/api/events`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
 
-      // --- Announcement ---
-      try {
-        const announceRes = await fetch(`${BASE_URL}/api/announcements`);
-        const announceData = await announceRes.json();
-
-        if (Array.isArray(announceData) && announceData.length > 0) {
-          setAnnouncement(
-            announceData[0].message ||
-            announceData[0].content ||
-            announceData[0].text ||
-            ""
+          const upcoming = data.filter(
+            (e) => new Date(e.date || e.eventDate) >= new Date()
           );
-        } else if (announceData?.message) {
-          setAnnouncement(announceData.message);
-        }
-      } catch (err) {
-        console.warn("Announcement fetch error:", err);
-      }
 
+          setStats((prev) => ({
+            ...prev,
+            upcomingEvents: upcoming.length,
+            nextEventName:
+              upcoming[0]?.name || upcoming[0]?.title || "—",
+          }));
+        } catch {}
+
+        // Notifications
+        try {
+          const res = await fetch(`${BASE_URL}/api/notifications`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
+          setNotifications(Array.isArray(data) ? data : []);
+        } catch {
+          setNotifications([]);
+        }
+
+        // Announcements
+        try {
+          const res = await fetch(`${BASE_URL}/api/announcements`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
+
+          if (Array.isArray(data) && data.length > 0) {
+            setMessage(
+              data[0].message ||
+              data[0].content ||
+              data[0].text ||
+              ""
+            );
+          } else if (data?.message) {
+            setMessage(data.message);
+          }
+        } catch {}
+      } catch (err) {
+        console.error("Token error:", err);
+      }
       setLoading(false);
     };
 
-    fetchAdminData();
-  }, []);
+    fetchData();
+  }, [user]);
+
+  if (!userData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center font-mono">
+        <p className="text-xl font-black animate-pulse">LOADING USER...</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-blue-50 p-6 sm:p-10 font-mono flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center font-mono">
         <p className="text-xl font-black animate-pulse">LOADING DASHBOARD...</p>
       </div>
     );
@@ -115,122 +163,66 @@ const AdminDashboard = () => {
         ADMIN DASHBOARD
       </h1>
 
-      {/* ================= TOP STATS ================= */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-        <AdminCard
-          title="Total Users"
-          value={stats?.totalUsers ?? stats?.userCount ?? "—"}
-          subtitle="+8% this month"
-          icon={Users}
-        />
-        <AdminCard
-          title="Active Orders"
-          value={stats?.activeOrders ?? stats?.orderCount ?? "—"}
-          subtitle="Updated today"
-          icon={ShoppingCart}
-        />
-        <AdminCard
-          title="Revenue"
-          value={
-            stats?.revenue
-              ? `$${Number(stats.revenue).toLocaleString()}`
-              : stats?.totalRevenue
-              ? `$${Number(stats.totalRevenue).toLocaleString()}`
-              : "—"
-          }
-          subtitle="+12% from last month"
-          icon={DollarSign}
-        />
+      {/* EXACT SAME CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+        <BrutalCard title="Total Donations" value={stats.totalDonations} subtitle="Supporting student funds" icon={HandCoins} />
+        <BrutalCard title="Events Attended" value={stats.eventsAttended} subtitle="Since joining" icon={Users} />
+        <BrutalCard title="Mentorship Sessions" value={stats.mentorshipSessions} subtitle="Total sessions" icon={GraduationCap} />
+        <BrutalCard title="Upcoming Events" value={stats.upcomingEvents} subtitle={`Next: ${stats.nextEventName}`} icon={Calendar} />
       </div>
 
-      {/* ================= LOWER GRID ================= */}
+      {/* SAME LOWER SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-        {/* ===== Recent Users ===== */}
-        <div className="
-          bg-white
-          border-4 border-black
-          p-8
-          shadow-[8px_8px_0px_#000]
-        ">
+        {/* Mentorship */}
+        <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_#000]">
           <h3 className="text-xl font-black mb-6 flex items-center gap-3">
-            <Users size={22} strokeWidth={2.5} />
-            RECENT USERS
+            <Calendar size={22} />
+            NEXT MENTORSHIP
           </h3>
 
-          {recentUsers.length === 0 ? (
-            <p className="font-bold">No new users</p>
+          {!mentorship ? (
+            <p className="font-bold">No upcoming session</p>
           ) : (
-            <ul className="space-y-4 text-sm font-medium">
-              {recentUsers.map((user, idx) => (
-                <li
-                  key={user.id ?? idx}
-                  className="
-                    bg-blue-200
-                    border-2 border-black
-                    p-4
-                    shadow-[4px_4px_0px_#000]
-                  "
-                >
-                  {user.name ?? user.fullName ?? user.username ?? "Unknown"}{" "}
-                  — {user.email ?? "No email"}
-                </li>
-              ))}
-            </ul>
+            <div className="space-y-3 text-sm font-medium">
+              <p><Calendar size={16} /> {mentorship.date}</p>
+              <p><Clock size={16} /> {mentorship.time}</p>
+              <p><User size={16} /> {mentorship.studentName} ({mentorship.department})</p>
+            </div>
           )}
         </div>
 
-        {/* ===== Admin Notifications ===== */}
-        <div className="
-          bg-blue-200
-          border-4 border-black
-          p-8
-          shadow-[8px_8px_0px_#000]
-        ">
+        {/* Notifications */}
+        <div className="bg-blue-200 border-4 border-black p-8 shadow-[8px_8px_0px_#000]">
           <h3 className="text-xl font-black mb-6 flex items-center gap-3">
-            <Bell size={22} strokeWidth={2.5} />
-            SYSTEM NOTIFICATIONS
+            <Bell size={22} />
+            NOTIFICATIONS
           </h3>
 
           {notifications.length === 0 ? (
-            <p className="font-bold">No alerts</p>
+            <p className="font-bold">No notifications</p>
           ) : (
-            <ul className="space-y-4 text-sm font-medium">
-              {notifications.map((note, idx) => (
-                <li
-                  key={note.id ?? idx}
-                  className="
-                    bg-white
-                    border-2 border-black
-                    p-4
-                    shadow-[4px_4px_0px_#000]
-                  "
-                >
-                  {note.message || note.content || note.text}
+            <ul className="space-y-3">
+              {notifications.map((n, i) => (
+                <li key={i} className="bg-white border-2 border-black p-3 text-sm shadow-[3px_3px_0px_#000]">
+                  {n.message || n.content || n.text}
                 </li>
               ))}
             </ul>
           )}
         </div>
 
-        {/* ===== Announcement ===== */}
-        <div className="
-          bg-blue-400
-          border-4 border-black
-          p-8
-          shadow-[8px_8px_0px_#000]
-          lg:col-span-2
-        ">
+        {/* Announcement */}
+        <div className="bg-blue-400 border-4 border-black p-8 shadow-[8px_8px_0px_#000] lg:col-span-2">
           <h3 className="text-xl font-black mb-4 flex items-center gap-3">
-            <Megaphone size={22} strokeWidth={2.5} />
-            ADMIN ANNOUNCEMENT
+            <MessageSquare size={22} />
+            MESSAGE FOR YOU
           </h3>
 
-          <p className="text-sm font-medium leading-relaxed">
-            {announcement || "No announcement available."}
+          <p className="text-sm font-medium">
+            {message || "No announcements at this time."}
           </p>
         </div>
-
       </div>
     </div>
   );
