@@ -12,6 +12,7 @@ import DonationsPage from "./pages/DonationsPage";
 import AlumniPage from "./pages/AlumniPage";
 import AlumniProfilePage from "./pages/AlumniProfilePage";
 import EditProfilePage from "./pages/EditProfilePage";
+import AdminPage from "./pages/AdminPage";
 
 import Header from "./components/layout/Header";
 import Sidebar from "./components/layout/Sidebar";
@@ -35,14 +36,38 @@ const ProtectedLayout = ({ children }) => (
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  if (loading)
+
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-screen font-mono font-black text-xl animate-pulse">
         LOADING...
       </div>
     );
+  }
+
   if (!user) return <Navigate to="/login" replace />;
+
   return <ProtectedLayout>{children}</ProtectedLayout>;
+};
+
+const RoleRoute = ({ children, allowedRoles }) => {
+  const { userData, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen font-mono font-black text-xl animate-pulse">
+        LOADING...
+      </div>
+    );
+  }
+
+  const role = userData?.role?.toLowerCase();
+
+  if (!allowedRoles.includes(role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
 };
 
 function App() {
@@ -59,24 +84,24 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-
-        {/* HOME */}
         <Route
           path="/"
           element={
-            !user
-              ? <MainLayout><HomePage /></MainLayout>
-              : <Navigate to="/dashboard" replace />
+            !user ? (
+              <MainLayout>
+                <HomePage />
+              </MainLayout>
+            ) : (
+              <Navigate to="/dashboard" replace />
+            )
           }
         />
 
-        {/* LOGIN */}
         <Route
           path="/login"
           element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />}
         />
 
-        {/* DASHBOARD — DashboardPage renders correct component by role */}
         <Route
           path="/dashboard"
           element={
@@ -86,7 +111,6 @@ function App() {
           }
         />
 
-        {/* ALUMNI DIRECTORY + PROFILE + EDIT */}
         <Route
           path="/alumni"
           element={
@@ -95,6 +119,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/alumni/:id"
           element={
@@ -103,6 +128,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/alumni/:id/edit"
           element={
@@ -112,15 +138,60 @@ function App() {
           }
         />
 
-        {/* SHARED PROTECTED */}
-        <Route path="/events"     element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
-        <Route path="/mentorship" element={<ProtectedRoute><MentorshipPage /></ProtectedRoute>} />
-        <Route path="/messages"   element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
-        <Route path="/donations"  element={<ProtectedRoute><DonationsPage /></ProtectedRoute>} />
+        <Route
+          path="/events"
+          element={
+            <ProtectedRoute>
+              <EventsPage />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* FALLBACK */}
+        <Route
+          path="/mentorship"
+          element={
+            <ProtectedRoute>
+              <RoleRoute allowedRoles={["student", "alumni"]}>
+                <MentorshipPage />
+              </RoleRoute>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/messages"
+          element={
+            <ProtectedRoute>
+              <RoleRoute allowedRoles={["student", "alumni"]}>
+                <MessagesPage />
+              </RoleRoute>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/donations"
+          element={
+            <ProtectedRoute>
+              <RoleRoute allowedRoles={["alumni"]}>
+                <DonationsPage />
+              </RoleRoute>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <RoleRoute allowedRoles={["admin"]}>
+                <AdminPage />
+              </RoleRoute>
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="*" element={<Navigate to="/" replace />} />
-
       </Routes>
     </BrowserRouter>
   );

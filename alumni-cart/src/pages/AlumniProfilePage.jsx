@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Pencil, Building2, GraduationCap, Mail, Phone, Briefcase } from "lucide-react";
+import {
+  ArrowLeft,
+  Pencil,
+  Building2,
+  GraduationCap,
+  Mail,
+  Phone,
+  Briefcase,
+  Link as LinkIcon,
+} from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const BASE_URL = "http://localhost:8080";
@@ -14,27 +23,46 @@ const AlumniProfilePage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !id) return;
+
     const fetchProfile = async () => {
       try {
         const token = await user.getIdToken();
-        const res = await fetch(`${BASE_URL}/api/alumni/${id}`, {
+        let res;
+
+        // preferred endpoint for your current backend
+        res = await fetch(`${BASE_URL}/api/alumni/profile/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
+        // fallback
+        if (!res.ok) {
+          res = await fetch(`${BASE_URL}/api/alumni/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
         const data = await res.json();
         setProfile(data);
       } catch (err) {
         console.error("Profile fetch error:", err);
+        setProfile(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
+
     fetchProfile();
   }, [user, id]);
 
-  // Can edit if ADMIN or if this is your own profile
+  const normalizedRole = role?.toUpperCase?.() || userData?.role?.toUpperCase?.();
   const canEdit =
-    role === "ADMIN" ||
-    (role === "ALUMNI" && (userData?.uid === id || user?.uid === id));
+    normalizedRole === "ADMIN" ||
+    (normalizedRole === "ALUMNI" && (userData?.uid === id || user?.uid === id));
 
   if (loading) {
     return (
@@ -60,10 +88,16 @@ const AlumniProfilePage = () => {
     );
   }
 
+  const fullName = profile.fullName || profile.name || "Unknown";
+  const batch = profile.batch || profile.graduationYear || "—";
+  const department = profile.department || profile.branch || "—";
+  const designation = profile.designation || profile.currentRole || profile.role;
+  const company = profile.currentCompany || profile.company;
+  const expertise = profile.skills || profile.expertise || profile.designation || "";
+  const donations = Number(profile.totalDonation || 0).toLocaleString();
+
   return (
     <div className="min-h-screen bg-blue-50 font-mono p-6 sm:p-10">
-
-      {/* Back */}
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-2 font-black text-sm mb-8 hover:underline"
@@ -72,64 +106,59 @@ const AlumniProfilePage = () => {
       </button>
 
       <div className="max-w-3xl mx-auto space-y-8">
-
-        {/* Hero Card */}
         <div className="bg-blue-300 border-4 border-black p-8 shadow-[8px_8px_0px_#000] flex flex-col sm:flex-row items-start sm:items-center gap-6">
-          {/* Avatar */}
           <div className="w-24 h-24 bg-blue-500 border-4 border-black flex items-center justify-center font-black text-4xl shadow-[4px_4px_0px_#000] flex-shrink-0">
-            {(profile.fullName || profile.name || "?")[0].toUpperCase()}
+            {fullName[0]?.toUpperCase() || "?"}
           </div>
 
           <div className="flex-1">
             <h1 className="text-3xl font-black mb-1">
-              {(profile.fullName || profile.name || "UNKNOWN").toUpperCase()}
+              {fullName.toUpperCase()}
             </h1>
+
             <p className="font-bold text-sm text-gray-700 mb-2">
-              BATCH {profile.batch || profile.graduationYear || "—"} · {profile.department || profile.branch || "—"}
+              BATCH {batch} · {department}
             </p>
-            {(profile.designation || profile.currentRole) && (
+
+            {designation && (
               <div className="inline-block bg-white border-2 border-black px-3 py-1 text-xs font-black shadow-[2px_2px_0px_#000]">
-                {(profile.designation || profile.currentRole).toUpperCase()}
+                {designation.toUpperCase()}
               </div>
+            )}
+
+            {company && (
+              <p className="font-bold text-sm mt-3">
+                {company}
+              </p>
             )}
           </div>
 
           {canEdit && (
             <button
               onClick={() => navigate(`/alumni/${id}/edit`)}
-              className="
-                flex items-center gap-2
-                bg-yellow-300 border-4 border-black
-                px-5 py-2 font-black text-sm
-                shadow-[4px_4px_0px_#000]
-                hover:translate-x-1 hover:translate-y-1
-                hover:shadow-[2px_2px_0px_#000]
-                transition-all flex-shrink-0
-              "
+              className="flex items-center gap-2 bg-yellow-300 border-4 border-black px-5 py-2 font-black text-sm shadow-[4px_4px_0px_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-[2px_2px_0px_#000] transition-all flex-shrink-0"
             >
               <Pencil size={14} strokeWidth={2.5} /> EDIT
             </button>
           )}
         </div>
 
-        {/* Details Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-
-          {(profile.currentCompany || profile.company) && (
+          {company && (
             <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_#000]">
               <div className="flex items-center gap-2 mb-2 font-black text-xs uppercase">
                 <Building2 size={14} strokeWidth={2.5} /> Current Company
               </div>
-              <p className="font-bold">{profile.currentCompany || profile.company}</p>
+              <p className="font-bold">{company}</p>
             </div>
           )}
 
-          {(profile.department || profile.branch) && (
+          {department && (
             <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_#000]">
               <div className="flex items-center gap-2 mb-2 font-black text-xs uppercase">
                 <GraduationCap size={14} strokeWidth={2.5} /> Department
               </div>
-              <p className="font-bold">{profile.department || profile.branch}</p>
+              <p className="font-bold">{department}</p>
             </div>
           )}
 
@@ -138,7 +167,7 @@ const AlumniProfilePage = () => {
               <div className="flex items-center gap-2 mb-2 font-black text-xs uppercase">
                 <Mail size={14} strokeWidth={2.5} /> Email
               </div>
-              <p className="font-bold">{profile.email}</p>
+              <p className="font-bold break-all">{profile.email}</p>
             </div>
           )}
 
@@ -151,18 +180,38 @@ const AlumniProfilePage = () => {
             </div>
           )}
 
-          {(profile.skills || profile.expertise) && (
+          {profile.linkedInUrl && (
+            <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_#000] sm:col-span-2">
+              <div className="flex items-center gap-2 mb-2 font-black text-xs uppercase">
+                <LinkIcon size={14} strokeWidth={2.5} /> LinkedIn
+              </div>
+              <a
+                href={profile.linkedInUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="font-bold underline break-all"
+              >
+                {profile.linkedInUrl}
+              </a>
+            </div>
+          )}
+
+          {expertise && (
             <div className="bg-blue-200 border-4 border-black p-6 shadow-[6px_6px_0px_#000] sm:col-span-2">
               <div className="flex items-center gap-2 mb-3 font-black text-xs uppercase">
                 <Briefcase size={14} strokeWidth={2.5} /> Skills / Expertise
               </div>
+
               <div className="flex flex-wrap gap-2">
-                {(profile.skills || profile.expertise || "")
+                {String(expertise)
                   .split(",")
-                  .map((s, i) => s.trim())
+                  .map((s) => s.trim())
                   .filter(Boolean)
                   .map((skill, i) => (
-                    <span key={i} className="bg-white border-2 border-black px-3 py-1 text-xs font-black shadow-[2px_2px_0px_#000]">
+                    <span
+                      key={i}
+                      className="bg-white border-2 border-black px-3 py-1 text-xs font-black shadow-[2px_2px_0px_#000]"
+                    >
                       {skill.toUpperCase()}
                     </span>
                   ))}
@@ -173,28 +222,29 @@ const AlumniProfilePage = () => {
           {profile.bio && (
             <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_#000] sm:col-span-2">
               <p className="font-black text-xs uppercase mb-3">BIO</p>
-              <p className="font-medium text-sm leading-relaxed">{profile.bio}</p>
+              <p className="font-medium text-sm leading-relaxed">
+                {profile.bio}
+              </p>
             </div>
           )}
-
         </div>
 
-        {/* Stats row */}
         <div className="grid grid-cols-3 gap-6">
           <div className="bg-blue-400 border-4 border-black p-6 shadow-[6px_6px_0px_#000] text-center">
             <p className="text-3xl font-black">{profile.eventAttended || 0}</p>
             <p className="text-xs font-bold mt-1">EVENTS</p>
           </div>
+
           <div className="bg-blue-400 border-4 border-black p-6 shadow-[6px_6px_0px_#000] text-center">
             <p className="text-3xl font-black">{profile.mentorshipSession || 0}</p>
             <p className="text-xs font-bold mt-1">MENTORSHIPS</p>
           </div>
+
           <div className="bg-blue-400 border-4 border-black p-6 shadow-[6px_6px_0px_#000] text-center">
-            <p className="text-3xl font-black">₹{Number(profile.totalDonation || 0).toLocaleString()}</p>
+            <p className="text-3xl font-black">₹{donations}</p>
             <p className="text-xs font-bold mt-1">DONATED</p>
           </div>
         </div>
-
       </div>
     </div>
   );

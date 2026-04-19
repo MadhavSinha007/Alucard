@@ -2,25 +2,25 @@ import React, { useEffect, useState } from "react";
 import {
   Bell,
   Calendar,
-  Clock,
-  User,
   HandCoins,
-  Users,
   GraduationCap,
   MessageSquare,
+  Users,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const BASE_URL = "http://localhost:8080";
 
 const BrutalCard = ({ title, value, subtitle, icon: Icon }) => (
-  <div className="
-    bg-blue-400 border-4 border-black p-6
-    shadow-[8px_8px_0px_#000]
-    transition-all duration-150
-    hover:translate-x-1 hover:translate-y-1
-    hover:shadow-[4px_4px_0px_#000]
-  ">
+  <div
+    className="
+      bg-blue-400 border-4 border-black p-6
+      shadow-[8px_8px_0px_#000]
+      transition-all duration-150
+      hover:translate-x-1 hover:translate-y-1
+      hover:shadow-[4px_4px_0px_#000]
+    "
+  >
     <div className="flex items-center gap-3 mb-3">
       <Icon size={22} strokeWidth={2.5} />
       <p className="text-sm font-bold uppercase">{title}</p>
@@ -34,55 +34,35 @@ const AdminDashboard = () => {
   const { user, userData } = useAuth();
 
   const [notifications, setNotifications] = useState([]);
-  const [mentorship, setMentorship] = useState(null);
   const [message, setMessage] = useState("");
+  const [events, setEvents] = useState([]);
+  const [mentorshipRequests, setMentorshipRequests] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [stats, setStats] = useState({
     totalDonations: "₹0",
-    eventsAttended: 0,
-    mentorshipSessions: 0,
-    upcomingEvents: 0,
-    nextEventName: "—",
+    totalEvents: 0,
+    mentorshipRequests: 0,
+    notificationsCount: 0,
   });
 
-  // ✅ SAME as Alumni
   useEffect(() => {
     if (!userData) return;
 
     setStats((prev) => ({
       ...prev,
       totalDonations: `₹${Number(userData.totalDonation || 0).toLocaleString()}`,
-      eventsAttended: Number(userData.eventAttended || 0),
-      mentorshipSessions: Number(userData.mentorshipSession || 0),
     }));
   }, [userData]);
 
-  // ✅ SAME FETCH AS ALUMNI
   useEffect(() => {
     if (!user) return;
 
     const fetchData = async () => {
       setLoading(true);
+
       try {
         const token = await user.getIdToken();
-
-        // Mentorship
-        try {
-          const res = await fetch(`${BASE_URL}/api/mentorship/my-requests`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            const next = data[0];
-            setMentorship({
-              date: next.date || next.scheduledDate || "TBD",
-              time: next.time || next.scheduledTime || "TBD",
-              studentName: next.studentName || next.requesterName || "Unknown",
-              department: next.department || next.branch || "N/A",
-            });
-          }
-        } catch {}
 
         // Events
         try {
@@ -90,18 +70,33 @@ const AdminDashboard = () => {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await res.json();
-
-          const upcoming = data.filter(
-            (e) => new Date(e.date || e.eventDate) >= new Date()
-          );
+          const safeEvents = Array.isArray(data) ? data : [];
+          setEvents(safeEvents);
 
           setStats((prev) => ({
             ...prev,
-            upcomingEvents: upcoming.length,
-            nextEventName:
-              upcoming[0]?.name || upcoming[0]?.title || "—",
+            totalEvents: safeEvents.length,
           }));
-        } catch {}
+        } catch {
+          setEvents([]);
+        }
+
+        // Mentorship Requests
+        try {
+          const res = await fetch(`${BASE_URL}/api/mentorship/my-requests`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
+          const safeRequests = Array.isArray(data) ? data : [];
+          setMentorshipRequests(safeRequests);
+
+          setStats((prev) => ({
+            ...prev,
+            mentorshipRequests: safeRequests.length,
+          }));
+        } catch {
+          setMentorshipRequests([]);
+        }
 
         // Notifications
         try {
@@ -109,7 +104,13 @@ const AdminDashboard = () => {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await res.json();
-          setNotifications(Array.isArray(data) ? data : []);
+          const safeNotifications = Array.isArray(data) ? data : [];
+          setNotifications(safeNotifications);
+
+          setStats((prev) => ({
+            ...prev,
+            notificationsCount: safeNotifications.length,
+          }));
         } catch {
           setNotifications([]);
         }
@@ -122,19 +123,15 @@ const AdminDashboard = () => {
           const data = await res.json();
 
           if (Array.isArray(data) && data.length > 0) {
-            setMessage(
-              data[0].message ||
-              data[0].content ||
-              data[0].text ||
-              ""
-            );
+            setMessage(data[0].message || data[0].content || data[0].text || "");
           } else if (data?.message) {
             setMessage(data.message);
           }
         } catch {}
       } catch (err) {
-        console.error("Token error:", err);
+        console.error("Dashboard fetch error:", err);
       }
+
       setLoading(false);
     };
 
@@ -163,39 +160,64 @@ const AdminDashboard = () => {
         ADMIN DASHBOARD
       </h1>
 
-      {/* EXACT SAME CARDS */}
+      {/* STATS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-        <BrutalCard title="Total Donations" value={stats.totalDonations} subtitle="Supporting student funds" icon={HandCoins} />
-        <BrutalCard title="Events Attended" value={stats.eventsAttended} subtitle="Since joining" icon={Users} />
-        <BrutalCard title="Mentorship Sessions" value={stats.mentorshipSessions} subtitle="Total sessions" icon={GraduationCap} />
-        <BrutalCard title="Upcoming Events" value={stats.upcomingEvents} subtitle={`Next: ${stats.nextEventName}`} icon={Calendar} />
+        <BrutalCard
+          title="Total Donations"
+          value={stats.totalDonations}
+          subtitle="Funds tracked across portal"
+          icon={HandCoins}
+        />
+        <BrutalCard
+          title="Total Events"
+          value={stats.totalEvents}
+          subtitle="Events available in portal"
+          icon={Calendar}
+        />
+        <BrutalCard
+          title="Mentorship Requests"
+          value={stats.mentorshipRequests}
+          subtitle="Requests needing attention"
+          icon={GraduationCap}
+        />
+        <BrutalCard
+          title="Notifications"
+          value={stats.notificationsCount}
+          subtitle="System-wide updates"
+          icon={Bell}
+        />
       </div>
 
-      {/* SAME LOWER SECTION */}
+      {/* LOWER GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-        {/* Mentorship */}
+        {/* Recent Mentorship Requests */}
         <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_#000]">
           <h3 className="text-xl font-black mb-6 flex items-center gap-3">
-            <Calendar size={22} />
-            NEXT MENTORSHIP
+            <Users size={22} strokeWidth={2.5} />
+            MENTORSHIP REQUESTS
           </h3>
 
-          {!mentorship ? (
-            <p className="font-bold">No upcoming session</p>
+          {mentorshipRequests.length === 0 ? (
+            <p className="font-bold">No mentorship requests</p>
           ) : (
-            <div className="space-y-3 text-sm font-medium">
-              <p><Calendar size={16} /> {mentorship.date}</p>
-              <p><Clock size={16} /> {mentorship.time}</p>
-              <p><User size={16} /> {mentorship.studentName} ({mentorship.department})</p>
-            </div>
+            <ul className="space-y-3">
+              {mentorshipRequests.slice(0, 4).map((req, i) => (
+                <li
+                  key={req.id ?? i}
+                  className="bg-blue-50 border-2 border-black p-3 text-sm font-medium shadow-[3px_3px_0px_#000]"
+                >
+                  {req.studentName || req.requesterName || "Unknown Student"}{" "}
+                  {req.department || req.branch ? `(${req.department || req.branch})` : ""}
+                </li>
+              ))}
+            </ul>
           )}
         </div>
 
         {/* Notifications */}
         <div className="bg-blue-200 border-4 border-black p-8 shadow-[8px_8px_0px_#000]">
           <h3 className="text-xl font-black mb-6 flex items-center gap-3">
-            <Bell size={22} />
+            <Bell size={22} strokeWidth={2.5} />
             NOTIFICATIONS
           </h3>
 
@@ -203,8 +225,11 @@ const AdminDashboard = () => {
             <p className="font-bold">No notifications</p>
           ) : (
             <ul className="space-y-3">
-              {notifications.map((n, i) => (
-                <li key={i} className="bg-white border-2 border-black p-3 text-sm shadow-[3px_3px_0px_#000]">
+              {notifications.slice(0, 4).map((n, i) => (
+                <li
+                  key={n.id ?? i}
+                  className="bg-white border-2 border-black p-3 text-sm font-medium shadow-[3px_3px_0px_#000]"
+                >
                   {n.message || n.content || n.text}
                 </li>
               ))}
@@ -215,11 +240,11 @@ const AdminDashboard = () => {
         {/* Announcement */}
         <div className="bg-blue-400 border-4 border-black p-8 shadow-[8px_8px_0px_#000] lg:col-span-2">
           <h3 className="text-xl font-black mb-4 flex items-center gap-3">
-            <MessageSquare size={22} />
-            MESSAGE FOR YOU
+            <MessageSquare size={22} strokeWidth={2.5} />
+            ADMIN MESSAGE
           </h3>
 
-          <p className="text-sm font-medium">
+          <p className="text-sm font-medium leading-relaxed">
             {message || "No announcements at this time."}
           </p>
         </div>

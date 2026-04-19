@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { useFakeAuth } from "../../hooks/useFakeAuth";
+import { useAuth } from "../../hooks/useAuth";
 import {
   LayoutDashboard,
   Users,
@@ -12,30 +12,36 @@ import {
 } from "lucide-react";
 
 const Sidebar = () => {
-  const { user } = useFakeAuth();
+  const { userData } = useAuth();
+  const role = userData?.role?.toLowerCase();
 
   const links = [
     { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
     { name: "Alumni Directory", path: "/alumni", icon: Users },
     { name: "Events", path: "/events", icon: Calendar },
-    { name: "Mentorship", path: "/mentorship", icon: GraduationCap },
-    { name: "Messages", path: "/messages", icon: MessageSquare },
-    { name: "Donations", path: "/donations", icon: HandCoins },
-  ];
 
-  if (user?.role === "admin") {
-    links.push({ name: "Admin Panel", path: "/admin", icon: Shield });
-  }
+    ...(role === "student" || role === "alumni"
+      ? [
+          { name: "Mentorship", path: "/mentorship", icon: GraduationCap },
+          { name: "Messages", path: "/messages", icon: MessageSquare },
+        ]
+      : []),
+
+    ...(role === "alumni"
+      ? [{ name: "Donations", path: "/donations", icon: HandCoins }]
+      : []),
+
+    ...(role === "admin"
+      ? [{ name: "Admin Panel", path: "/admin", icon: Shield }]
+      : []),
+  ];
 
   return (
     <aside className="w-72 min-h-screen bg-blue-400 border-r-4 border-black p-6 font-mono flex flex-col">
-
-      {/* Title */}
       <div className="mb-10 border-b-4 border-black pb-4">
         <h2 className="text-xl font-black">NAVIGATION</h2>
       </div>
 
-      {/* Links */}
       <nav className="flex flex-col gap-4">
         {links.map((link) => {
           const Icon = link.icon;
@@ -67,7 +73,6 @@ const Sidebar = () => {
         })}
       </nav>
 
-      {/* Footer */}
       <div className="mt-auto pt-10 border-t-4 border-black text-xs font-bold">
         ALUMNI CART © {new Date().getFullYear()}
       </div>
